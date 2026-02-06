@@ -408,18 +408,18 @@ static void mpmult(int[] vect1, int[] vect2, int[] alp, int[] alpinv, int[] g1)
 						{
 							for (n0 = 0; n0 < 2; n0++)
 							{
-								for (k3 = 0; k3 < 2; k3++)
+								for (k3 = 0; k3 < 5; k3++)
 								{
 									accout = 1000 * k0 + 200 * k1 + 40 * k2 + 8 * n3 + 4 * n2 + 2 * n1 + n0;
 									accin = 1000 * k0 + 200 * k1 + 40 * k2 + 8 * k3 + 4 * n2 + 2 * n1 + n0;
 									accrt = (125 * k3 * (8 * n3 + 4 * n2 + 2 * n1 + n0)) % N;
 
-									if(accrt == 0)
+									if (accrt == 0)
 									{
 										x0[accout] = negmod(x1[accin] + x0[accout], M);
 										h0[accout] = negmod(h1[accin] + h0[accout], M);
 									}
-									else if(accrt == 2500)
+									else if (accrt == 2500)
 									{
 										x0[accout] = negmod(-x1[accin] + x0[accout], M);
 										h0[accout] = negmod(-h1[accin] + h0[accout], M);
@@ -463,6 +463,360 @@ static void mpmult(int[] vect1, int[] vect2, int[] alp, int[] alpinv, int[] g1)
 	{
 		x1[i] = 0;
 		h1[i] = 0;
+	}
+
+	for (k0 = 0; k0 < 5; k0++)
+	{
+		for (k1 = 0; k1 < 5; k1++)
+		{
+			for (n4 = 0; n4 < 5; n4++)
+			{
+				for (n3 = 0; n3 < 5; n3++)
+				{
+					for (n2 = 0; n2 < 2; n2++)
+					{
+						for (n1 = 0; n1 < 2; n1++)
+						{
+							for (n0 = 0; n0 < 2; n0++)
+							{
+								for (k2 = 0; k2 < 5; k2++)
+								{
+									accout = 1000 * k0 + 200 * k1 + 40 * n4 + 8 * n3 + 4 * n2 + 2 * n1 + n0;
+									accin = 1000 * k0 + 200 * k1 + 40 * k2 + 8 * n3 + 4 * n2 + 2 * n1 + n0;
+									accrt = (25 * k2 * (40 * n4 + 8 * n3 + 4 * n2 + 2 * n1 + n0)) % N;
+
+									if (accrt == 0)
+									{
+										x1[accout] = negmod(x0[accin] + x1[accout], M);
+										h1[accout] = negmod(h0[accin] + h1[accout], M);
+									}
+									else if (accrt == 2500)
+									{
+										x1[accout] = negmod(-x0[accin] + x1[accout], M);
+										h1[accout] = negmod(-h0[accin] + h1[accout], M);
+									}
+									else
+									{
+										check = Math.Abs(go / alp[accrt]);
+
+										if (Math.Abs(x0[accin]) > check)
+										{
+											temp = mymod(x0[accin], alp[accrt]);
+											x1[accout] = negmod(x1[accout] + temp, M);
+										}
+										else
+										{
+											temp = negmod(x0[accin] * alp[accrt], M);
+											x1[accout] = negmod(x1[accout] + temp, M);
+										}
+
+										if (Math.Abs(h0[accin]) > check)
+										{
+											temp = mymod(h0[accin], alp[accrt]);
+											h1[accout] = negmod(h1[accout] + temp, M);
+										}
+										else
+										{
+											temp = negmod(h0[accin] * alp[accrt], M);
+											h1[accout] = negmod(h1[accout] + temp, M);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for (i = 0; i < size - 3; i++)
+	{
+		x0[i] = 0;
+		h0[i] = 0;
+	}
+
+	for (k0 = 0; k0 < 5; k0++)
+	{
+		for (n5 = 0; n5 < 5; n5++)
+		{
+			for (n4 = 0; n4 < 5; n4++)
+			{
+				for (n3 = 0; n3 < 5; n3++)
+				{
+					for (n2 = 0; n2 < 2; n2++)
+					{
+						for (n1 = 0; n1 < 2; n1++)
+						{
+							for (n0 = 0; n0 < 2; n0++)
+							{
+								for (k1 = 0; k1 < 5; k1++)
+								{
+									accout = 1000 * k0 + 200 * n5 + 40 * n4 + 8 * n3 + 4 * n2 + 2 * n1 + n0;
+									accin = 1000 * k0 + 200 * k1 + 40 * n4 + 8 * n3 + 4 * n2 + 2 * n1 + n0;
+									accrt = (5 * k1 * (200 * n5 + 40 * n4 + 8 * n3 + 4 * n2 + 2 * n1 + n0)) % N;
+
+									if (accrt == 0)
+									{
+										x0[accout] = negmod(x1[accin] + x0[accout], M);
+										h0[accout] = negmod(h1[accin] + h0[accout], M);
+									}
+									else if (accrt == 2500)
+									{
+										x0[accout] = negmod(-x1[accin] + x0[accout], M);
+										h0[accout] = negmod(-h1[accin] + h0[accout], M);
+									}
+									else
+									{
+										check = Math.Abs(go / alp[accrt]);
+
+										if (Math.Abs(x1[accin]) > check)
+										{
+											temp = mymod(x1[accin], alp[accrt]);
+											x0[accout] = negmod(x0[accout] + temp, M);
+										}
+										else
+										{
+											temp = negmod(x1[accin] * alp[accrt], M);
+											x0[accout] = negmod(x0[accout] + temp, M);
+										}
+
+										if (Math.Abs(h1[accin]) > check)
+										{
+											temp = mymod(h1[accin], alp[accrt]);
+											h0[accout] = negmod(h0[accout] + temp, M);
+										}
+										else
+										{
+											temp = negmod(h1[accin] * alp[accrt], M);
+											h0[accout] = negmod(h0[accout] + temp, M);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for (i = 0; i < size - 3; i++)
+	{
+		x1[i] = 0;
+		h1[i] = 0;
+	}
+
+	for (n6 = 0; n6 < 5; n6++)
+	{
+		for (n5 = 0; n5 < 5; n5++)
+		{
+			for (n4 = 0; n4 < 5; n4++)
+			{
+				for (n3 = 0; n3 < 5; n3++)
+				{
+					for (n2 = 0; n2 < 2; n2++)
+					{
+						for (n1 = 0; n1 < 2; n1++)
+						{
+							for (n0 = 0; n0 < 2; n0++)
+							{
+								for (k0 = 0; k0 < 5; k0++)
+								{
+									accout = 1000 * n6 + 200 * n5 + 40 * n4 + 8 * n3 + 4 * n2 + 2 * n1 + n0;
+									accin = 1000 * k0 + 200 * n5 + 40 * n4 + 8 * n3 + 4 * n2 + 2 * n1 + n0;
+									accrt = (k0 * (1000 * n6 + 200 * n5 + 40 * n4 + 8 * n3 + 4 * n2 + 2 * n1 + n0)) % N;
+
+									if (accrt == 0)
+									{
+										x1[accout] = negmod(x0[accin] + x1[accout], M);
+										h1[accout] = negmod(h0[accin] + h1[accout], M);
+									}
+									else if (accrt == 2500)
+									{
+										x1[accout] = negmod(-x0[accin] + x1[accout], M);
+										h1[accout] = negmod(-h0[accin] + h1[accout], M);
+									}
+									else
+									{
+										check = Math.Abs(go / alp[accrt]);
+
+										if (Math.Abs(x0[accin]) > check)
+										{
+											temp = mymod(x0[accin], alp[accrt]);
+											x1[accout] = negmod(x1[accout] + temp, M);
+										}
+										else
+										{
+											temp = negmod(x0[accin] * alp[accrt], M);
+											x1[accout] = negmod(x1[accout] + temp, M);
+										}
+
+										if (Math.Abs(h0[accin]) > check)
+										{
+											temp = mymod(h0[accin], alp[accrt]);
+											h1[accout] = negmod(h1[accout] + temp, M);
+										}
+										else
+										{
+											temp = negmod(h0[accin] * alp[accrt], M);
+											h1[accout] = negmod(h1[accout] + temp, M);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/*
+	This for loop multiplies the two transformed vectors together element by
+	element
+	*/
+
+	for (i = 0; i < size - 3; i++)
+	{
+		if (h1[i] != 0)
+		{
+			check = Math.Abs(go / h1[i]);
+
+			if (Math.Abs(x1[i]) > check)
+			{
+				g0[i] = mymod(x1[i], h1[i]);
+			}
+			else
+			{
+				g0[i] = negmod(x1[i] * h1[i], M);
+			}
+		}
+		else
+		{
+			g0[i] = 0;
+		}
+	}
+
+	/*
+	So far, x1 and h1 holds the transform of the input vector x0; also,
+	x0[5000 -> 5002] and h0[5000 -> 5002] have not been touched and will not
+	for the remainder of the calculation, which performs the inverse transform of
+	g0[].
+	*/
+
+	for (k0 = 0; k0 < 5; k0++)
+	{
+		for (k1 = 0; k1 < 5; k1++)
+		{
+			for (k2 = 0; k2 < 5; k2++)
+			{
+				for (k3 = 0; k3 < 5; k3++)
+				{
+					for (k4 = 0; k4 < 2; k4++)
+					{
+						for (k5 = 0; k5 < 2; k5++)
+						{
+							for (n0 = 0; n0 < 2; n0++)
+							{
+								for (k6 = 0; k6 < 2; k6++)
+								{
+									accout = 1000 * k0 + 200 * k1 + 40 * k2 + 8 * k3 + 4 * k4 + 2 * k5 + n0;
+									accin = 2500 * k6 + 1250 * k5 + 625 * k4 + 125 * k3 + 25 * k2 + 5 * k1 + k0;
+									accrt = (2500 * k6 * n0) % N;
+
+									if (accrt == 0)
+									{
+										g1[accout] = negmod(g0[accin] + g1[accout], M);
+									}
+									else if (accrt == 2500)
+									{
+										g1[accout] = negmod(-g0[accin] + g1[accout], M);
+									}
+									else
+									{
+										check = Math.Abs(go / alpinv[accrt]);
+
+										if (Math.Abs(g0[accin]) > check)
+										{
+											temp = mymod(g0[accin], alpinv[accrt]);
+											g1[accout] = negmod(g1[accout] + temp, M);
+										}
+										else
+										{
+											temp = negmod(g0[accin] * alpinv[accrt], M);
+											g1[accout] = negmod(g1[accout] + temp, M);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for (i = 0; i < size - 3; i++)
+	{
+		g0[i] = 0;
+	}
+
+	for (k0 = 0; k0 < 5; k0++)
+	{
+		for (k1 = 0; k1 < 5; k1++)
+		{
+			for (k2 = 0; k2 < 5; k2++)
+			{
+				for (k3 = 0; k3 < 5; k3++)
+				{
+					for (k4 = 0; k4 < 2; k4++)
+					{
+						for (n1 = 0; n1 < 2; n1++)
+						{
+							for (n0 = 0; n0 < 2; n0++)
+							{
+								for (k5 = 0; k5 < 2; k5++)
+								{
+									accout = 1000 * k0 + 200 * k1 + 40 * k2 + 8 * k3 + 4 * k4 + 2 * n1 + n0;
+									accin = 1000 * k0 + 200 * k1 + 40 * k2 + 8 * k3 + 4 * k4 + 2 * k5 + n0;
+									accrt = (1250 * k5 * (2 * n1 + n0)) % N;
+
+									if (accrt == 0)
+									{
+										g0[accout] = negmod(g1[accin] + g0[accout], M);
+									}
+									else if (accrt == 2500)
+									{
+										g0[accout] = negmod(-g1[accin] + g0[accout], M);
+									}
+									else
+									{
+										check = Math.Abs(go / alpinv[accrt]);
+
+										if (Math.Abs(g1[accin]) > check)
+										{
+											temp = mymod(g1[accin], alpinv[accrt]);
+											g0[accout] = negmod(g0[accout] + temp, M);
+										}
+										else
+										{
+											temp = negmod(g1[accin] * alpinv[accrt], M);
+											g0[accout] = negmod(g0[accout] + temp, M);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for (i = 0; i < size - 3; i++)
+	{
+		g1[i] = 0;
 	}
 
 	// POST-IT
