@@ -10,6 +10,8 @@ The variable M is the modulus number. N is the length of the transform.
 limit is used to set the maximum precision for the calculation.
 */
 
+using System.Runtime.Intrinsics;
+
 const int M = 50_010_001;
 const int halfM = M / 2;
 const int N = 5_000;
@@ -1391,7 +1393,489 @@ static void mpadd(int[] vect1, int[] vect2, int[] g)
 	g[5000] = 1;
 }
 
-// POST-IT, pg. 60, starting with mpsub()...
+/*
+The mpsub function subtracts vect2[] from vect1[]
+*/
+
+static void mpsub(int[] vect1, int[] vect2, int[] g)
+{
+	short i, j, set;
+	int stemp, t, temp, shift, tell, length, maxexp;
+
+	var x = new int[5003];
+	var h = new int[5003];
+
+	set = 0;
+
+	/*
+	Clear out the vectors 
+	*/
+
+	for (i = 0; i < 5003; i++)
+	{
+		x[i] = 0;
+		h[i] = 0;
+		g[i] = 0;
+	}
+
+	maxexp = Math.Max(vect1[5001], vect2[5001]);
+
+	/*
+	This if-else if-else structure determines how th einput vectors should
+	be shifted (if at all) to align the numbers such that the decimal point
+	is located in the same place in the vectors.
+	*/
+
+	if ((vect1[5002] - vect1[5001]) < (vect2[5002 - vect2[5001]]))
+	{
+		shift = vect2[5002] - vect1[5002] + vect1[5001] - vect2[5001];
+
+		if ((vect1[5002] + shift) >= vect2[5002])
+		{
+			length = vect1[5002] + shift;
+		}
+		else
+		{
+			length = vect2[5002];
+		}
+
+		tell = 1;
+	}
+	else if ((vect1[5002] - vect1[5001]) > (vect2[5002] - vect2[5001]))
+	{
+		shift = vect1[5002] - vect2[5002] + vect2[5001] - vect1[5001];
+
+		if ((vect2[5002] + shift) >= vect1[5002])
+		{
+			length = vect2[5002] + shift;
+		}
+		else
+		{
+			length = vect2[5002];
+		}
+
+		tell = 0;
+	}
+	else
+	{
+		shift = 0;
+		tell = 2;
+		length = Math.Max(vect1[5002], vect2[5002]);
+	}
+
+	/*
+	These if statements shift the input vectors (if necessary). 
+	*/
+
+	if (tell == 1)
+	{
+		for (i = 0; i < vect1[5002]; i++)
+		{
+			x[i + shift] = vect1[i];
+		}
+	}
+	else
+	{
+		for (i = 0; i < vect1[5002]; i++)
+		{
+			x[i] = vect1[i];
+		}
+	}
+
+	if (tell == 0)
+	{
+		for (i = 0; i < vect2[5002]; i++)
+		{
+			h[i + shift] = vect2[i];
+		}
+	}
+	else
+	{
+		for (i = 0; i < vect2[5002]; i++)
+		{
+			h[i] = vect2[i];
+		}
+	}
+
+	/*
+	This while loop determines if vect2[] was bigger than vect1[]. If so
+	then the result will be negative; otherwise, the answer will be positive.
+	If the result will be negative, the x and h vectors are switched.
+	*/
+
+	i = (short)(length - 1);
+
+	while (i > -1)
+	{
+		temp = x[i] - h[1];
+
+		if (temp > 0)
+		{
+			g[5000] = 1;
+			i = -2;
+		}
+		else if (temp < 0)
+		{
+			for (j = (short)length; j > -1; j--)
+			{
+				stemp = x[j];
+				x[j] = h[j];
+				h[j] = stemp;
+				g[5000] = 0;
+				i = -2;
+			}
+		}
+		else
+		{
+			i--;
+		}
+	}
+
+	/*
+	This for loop subtracts h[] from x[] and stores the result in g[].
+	*/
+
+	for (i = 0; i < length; i++)
+	{
+		if (x[i] >= h[i])
+		{
+			g[i] = x[i] - h[i];
+		}
+		else
+		{
+			x[i + 1] = x[i + 1] - 1;
+			x[i] = x[i] + 100;
+			g[i] = x[i] - h[i];
+		}
+	}
+
+	/*
+	This while loop determines the exponent and length of g[].
+	*/
+
+	i = (short)(length - 1);
+
+	while (i > -1)
+	{
+		if (g[i] != 0)
+		{
+			i = 2;
+		}
+		else
+		{
+			if (length == 1)
+			{
+				maxexp = 0;
+				length = 1;
+				i--;
+				set = 1;
+			}
+			else
+			{
+				maxexp = maxexp - 1;
+				length = length - 1;
+				i--;
+			}
+		}
+	}
+
+	if (set == 1)
+	{
+		g[5000] = 1;
+	}
+
+	g[5001] = maxexp;
+	g[5002] = length;
+
+	/*
+	This for loop sets all elements that do not contain part of the answer
+	to 0.
+	*/
+
+	for (i = (short)g[5002]; i < 5000; i++)
+	{
+		g[i] = 0;
+	}
+
+	for (i = 0; i < 5003; i++)
+	{
+		x[i] = 0;
+	}
+
+	/*
+	This for loop truncates the final vector to the limit value defined by
+	the user if the answer in g1[] is larger than limit.
+	*/
+
+	if (g[5002] > Shared.limit)
+	{
+		temp = g[5002] - Shared.limit;
+
+		for (i = (short)(g[5002] - 1); i > (temp - 1); i--)
+		{
+			x[i - temp] = g[i];
+		}
+
+		for (i = 0; i < 5000; i++)
+		{
+			g[i] = x[i];
+		}
+
+		g[5002] = Shared.limit;
+	}
+}
+
+/*
+This function calculates an initial guess of the square root of
+vect[].
+*/
+
+static void sqrtguess(int[] vect, int[] g)
+{
+	short i;
+	int show, k, yguess;
+	long temp, one;
+
+	/*
+	Clear out the vector.
+	*/
+	for (i = 0; i < 5003; i++)
+	{
+		g[i] = 0;
+	}
+
+	/*
+	This if structure calculates the initial guess of vect1[].
+	*/
+
+	if (vect[5001] % 2 == 0 && vect[5002] >= 3)
+	{
+		k = vect[5001] / 2;
+		temp = (10000 * vect[vect[5002] - 1] + 100 * vect[vect[5002] - 2] + vect[vect[5002] - 3]);
+		yguess = (int)Math.Sqrt(temp);
+		g[0] = yguess - (yguess / 100) * 100;
+		yguess = yguess / 100;
+		g[1] = yguess - (yguess / 100) * 100;
+		g[2] = yguess / 100;
+		g[5000] = 1;
+		g[5001] = k;
+
+		if (g[2] != 0)
+		{
+			g[5002] = 3;
+		}
+		else
+		{
+			g[5002] = 2;
+		}
+	}
+	else if (vect[5001] % 2 != 0 && vect[5002] >= 2)
+	{
+		k = vect[5001] - 1;
+		k = k / 2;
+		temp = (100 * vect[vect[5002] - 1] + vect[vect[5002] - 2]);
+		yguess = (int)Math.Sqrt(temp);
+		g[0] = yguess - (yguess / 100) * 100;
+		g[1] = yguess / 100;
+		g[5000] = 1;
+		g[5001] = k;
+
+		if (g[1] != 0)
+		{
+			g[5002] = 2;
+		}
+		else
+		{
+			g[5002] = 1;
+		}
+	}
+	else if (vect[5002] == 2)
+	{
+		if (vect[5001] % 2 == 0)
+		{
+			k = vect[5001] / 2;
+		}
+		else
+		{
+			k = vect[5001] - 1;
+			k = k / 2;
+		}
+
+		temp = (100 * vect[1] + vect[0]);
+		yguess = (int)Math.Sqrt(temp);
+		g[0] = yguess - (yguess / 100) * 100;
+		g[1] = yguess / 100;
+		g[5000] = 1;
+		g[5001] = k;
+
+		if (g[1] != 0)
+		{
+			g[5002] = 2;
+		}
+		else
+		{
+			g[5002] = 1;
+		}
+	}
+	else
+	{
+		if (vect[5001] % 2 == 0)
+		{
+			k = vect[5001] / 2;
+		}
+		else
+		{
+			k = vect[5001] - 1;
+			k = k / 2;
+		}
+
+		one = (long)Math.Sqrt(vect[0]);
+		g[1] = (int)one;
+		g[0] = (int)((one - g[1]) * 100);
+		g[5000] = 1;
+		g[5001] = k;
+
+		if (g[1] != 0)
+		{
+			g[5002] = 2;
+		}
+		else
+		{
+			g[5002] = 1;
+		}
+	}
+}
+
+/*
+The ptfive function multiplies in[] by 0.5. Since the recipsqrt
+function as well as the main program needs to divide a vector by two,
+this function was written to perform the multiplication rather than 
+calling mpmult (this is quicker).
+*/
+
+static void ptfive(int[] @in, int[] @out)
+{
+	short i;
+	int t, temp;
+
+	/*
+	Clear out the vector.
+	*/
+
+	for (i = 0; i < 5003; i++)
+	{
+		@out[i] = 0;
+	}
+
+	/*
+	This for loop performs the multiplication.
+	*/
+
+	for (i = 0; i < @in[5002], i++)
+	{
+		@out[i] = @in[i] * 50;
+	}
+
+	/*
+	This for loop releases the carries on @out[].
+	*/
+
+	for (i = 0; i < @in[5002]; i++)
+	{
+		t = @out[i] / 100;
+		temp = t * 100;
+		@out[i] = @out[i] - temp;
+		@out[i + 1] = @out[i + 1] + t;
+
+		if (i == (@in[5002] - 1) || @in[5002] < 2)
+		{
+			if (t == 0)
+			{
+				@out[5001] = @in[5001] = 1;
+
+				if (@in[5002] < 2)
+				{
+					@out[5002] = 1;
+				}
+				else
+				{
+					@out[5002] = @in[5002];
+				}
+			}
+			else
+			{
+				@out[5001] = @in[5001];
+
+				if (@in[5002] < 2)
+				{
+					@out[5002] = 2;
+				}
+				else
+				{
+					@out[5002] = @in[5002] + 1;
+				}
+			}
+		}
+	}
+
+	if (@in[5000] == 1)
+	{
+		@out[5000] = 1;
+	}
+	else
+	{
+		@out[5000] = 0;
+	}
+}
+
+/*
+The invert function performs 1 / vect[] for the recipsqrt function.
+*/
+static void invert(int[] vect, int[] g)
+{
+	short i;
+	double show;
+
+	/*
+	Clear out the vector.
+	*/
+
+	for (i = 0; i < 5003; i++)
+	{
+		g[i] = 0;
+	}
+
+	show = 100 * vect[1] + vect[0];
+
+	if (show == 100 && vect[5001] == 0)
+	{
+		g[0] = 1;
+		g[5002] = 1;
+		g[5000] = 1;
+		g[5001] = 0;
+	}
+	else
+	{
+		show = 1 / show;
+
+		g[1] = (int)(100 * show);
+
+		if (g[1] == 0)
+		{
+			show = show * 100;
+			g[1] = (int)(100 * show);
+		}
+
+		show = show * 100 - 100 * show;
+		g[0] = (int)(100 * show);
+		g[5002] = 2;
+		g[5000] = 1;
+		g[5001] = vect[5001] * -1 - 1;
+	}
+}
+
+// POST-IT, recipguess on pg. 68
+
 
 #pragma warning disable CA1050 // Declare types in namespaces
 #pragma warning disable CA1716 // Identifiers should not match keywords
