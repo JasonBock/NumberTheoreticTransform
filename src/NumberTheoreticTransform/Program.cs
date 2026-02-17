@@ -10,7 +10,8 @@ The variable M is the modulus number. N is the length of the transform.
 limit is used to set the maximum precision for the calculation.
 */
 
-using System.Runtime.Intrinsics;
+using System.Globalization;
+using System.Text;
 
 const int M = 50_010_001;
 const int halfM = M / 2;
@@ -21,6 +22,297 @@ Console.WriteLine(multinv(43_015));
 Console.WriteLine(negmod(5_310_431, 415));
 Console.WriteLine(negmod(-5_310_431, 415));
 Console.WriteLine(mymod(5_310_431, 5_310_431));
+
+/*
+The main part of the program calculates pi using Borwein's quadrati-
+cally converging algorithm. For all of the vectors, element 5000 deter-
+mines the sign (1 for positive and 0 for negative), element 5001 holds
+the exponent of the number and element 5002 holds the size of the
+number
+*/
+
+int i, aij, q;
+var alp = new int[5003];
+var alpinv = new int[5003];
+var ak = new int[5003];
+var bk = new int[5003];
+var pk = new int[5003];
+var one = new int[5003];
+var temp = new int[5003];
+var temp2 = new int[5003];
+var temp3 = new int[5003];
+var ak1 = new int[5003];
+var bk1 = new int[5003];
+var pk1 = new int[5003];
+short correct = 0;
+var go = Math.Pow(2, 31) - 1;
+
+/*
+Clear out the vectors.
+*/
+
+for (i = 0; i < 5003; i++)
+{
+	alp[i] = 0;
+	alpinv[i] = 0;
+	ak[i] = 0;
+	bk[i] = 0;
+	pk[i] = 0;
+	one[i] = 0;
+	temp[i] = 0;
+	temp2[i] = 0;
+	temp3[i] = 0;
+	ak1[i] = 0;
+	bk1[i] = 0;
+	pk1[i] = 0;
+}
+
+aij = 1;
+q = 1;
+alp[0] = 1;
+alpinv[0] = 1;
+
+/*
+This for loop calculates the T and T^-1 elements for the NTT. 
+*/
+
+for (i = 1; i < N; i++)
+{
+	if (Math.Abs(aij) > (go / 12265))
+	{
+		aij = mymod(aij, 12265);
+
+		while (aij < 0)
+		{
+			aij = aij + 50010001;
+		}
+	}
+	else
+	{
+		aij = (aij * 12265) % M;
+	}
+
+	if (aij != 1)
+	{
+		q = multinv(aij);
+	}
+	else
+	{
+		q = 1;
+	}
+
+	if (aij > 25005000)
+	{
+		aij = aij - M;
+	}
+	else if (aij < -25005000)
+	{
+		aij = aij + M;
+	}
+
+	if (q > 25005000)
+	{
+		q = q - M;
+	}
+	else if (q < -25005000)
+	{
+		q = q + M;
+	}
+
+	alp[i] = aij;
+	alpinv[i] = q;
+
+	while (aij < 0)
+	{
+		aij = aij + M;
+	}
+
+	/*
+	ak[], bk[] and pk[] are set to initial values.
+	*/
+
+	ak[0] = 2;
+	ak[5000] = 1;
+	ak[5001] = 0;
+	ak[5002] = 1;
+
+	bk[5000] = 1;
+	bk[5001] = 0;
+	bk[5002] = 1;
+
+	pk[0] = 2;
+	pk[5000] = 1;
+	pk[5001] = 0;
+	pk[5002] = 1;
+
+	one[0] = 1;
+	one[5000] = 1;
+	one[5001] = 0;
+	one[5002] = 1;
+
+	Console.WriteLine("Enter in the limit (max. is 2450)");
+	Shared.limit = short.Parse(Console.ReadLine()!, CultureInfo.CurrentCulture);
+
+	/*
+	These initial steps set a0 = sqrt(2), b0 = 0 and p0 = 2 + a0.
+	*/
+
+	recipsqrt(ak, alp, alpinv, temp);
+	Console.WriteLine("Initial Step 1 done");
+	mpmult(temp, pk, alp, alpinv, temp2);
+	Console.WriteLine("Initial Step 2 done");
+
+	for (i = 0; i < 5003; i++)
+	{
+		ak[i] = temp2[i];
+	}
+
+	Console.WriteLine("Initial Step 3 done");
+	mpadd(ak, pk, temp2);
+	Console.WriteLine("Initial Step 4 done");
+
+	for (i = 0; i < 5003; i++)
+	{
+		pk[i] = temp2[i];
+	}
+
+	Console.WriteLine("Initial Step 5 done");
+
+	/*
+	This while loop performs the pi iteration
+	*/
+
+	while (correct < Shared.limit)
+	{
+		recipsqrt(ak, alp, alpinv, temp);
+		Console.WriteLine($"Step A done at correct = {correct}");
+
+		for (i = 0; i < 5003; i++)
+		{
+			temp2[i] = temp[i];
+		}
+
+		Console.WriteLine($"Step B done at correct = {correct}");
+		mpmult(ak, temp2, alp, alpinv, temp3);
+		Console.WriteLine($"Step C done at correct = {correct}");
+		mpadd(temp, temp3, ak1);
+		Console.WriteLine($"Step D done at correct = {correct}");
+		ptfive(ak1, temp2);
+		Console.WriteLine($"Step E done at correct = {correct}");
+
+		for (i = 0; i < 5003; i++)
+		{
+			ak1[i] = temp2[i];
+		}
+
+		Console.WriteLine($"Step F done at correct = {correct}");
+		mpadd(one, bk, temp);
+		Console.WriteLine($"Step G done at correct = {correct}");
+		mpmult(temp, temp3, alp, alpinv, bk1);
+
+		for (i = 0; i < 5003; i++)
+		{
+			temp3[i] = bk1[i];
+		}
+
+		Console.WriteLine($"Step H done at correct = {correct}");
+		mpadd(ak, bk, temp);
+		Console.WriteLine($"Step I done at correct = {correct}");
+		recip(temp, alp, alpinv, temp2);
+		Console.WriteLine($"Step J done at correct = {correct}");
+		mpmult(temp3, temp2, alp, alpinv, bk1);
+		Console.WriteLine($"Step K done at correct = {correct}");
+		mpadd(one, ak1, temp);
+		Console.WriteLine($"Step L done at correct = {correct}");
+		mpmult(bk1, temp, alp, alpinv, temp2);
+		Console.WriteLine($"Step M done at correct = {correct}");
+		mpmult(pk, temp2, alp, alpinv, temp3);
+		Console.WriteLine($"Step N done at correct = {correct}");
+		mpadd(one, bk1, temp);
+		Console.WriteLine($"Step O done at correct = {correct}");
+		recip(temp, alp, alpinv, temp2);
+		Console.WriteLine($"Step P done at correct = {correct}");
+		mpmult(temp2, temp3, alp, alpinv, pk1);
+		Console.WriteLine($"Step Q done at correct = {correct}");
+
+		/*
+		This for loop prints out pi so that the user can see the
+		convergence.
+		*/
+
+		Console.WriteLine($"This is pi to the desired precision at correct = {correct}");
+		Console.WriteLine();
+
+		for (i = (pk1[5002] - 1); i > -1; i--)
+		{
+			if (pk1[i] >= 10)
+			{
+				Console.Write(pk1[i]);
+			}
+			else
+			{
+				Console.Write($"0{pk1[i]}");
+			}
+		}
+
+		Console.WriteLine();
+
+		/*
+		This for loop sets the i+1 element as i.
+		*/
+
+		for (i = 0; i < 5003; i++)
+		{
+			ak[i] = ak1[i];
+			bk[i] = bk1[i];
+			pk[i] = pk1[i];
+		}
+
+		for (i = 0; i < 5003; i++)
+		{
+			temp[i] = 0;
+			temp2[i] = 0;
+			temp3[i] = 0;
+			ak1[i] = 0;
+			bk1[i] = 0;
+			pk1[i] = 0;
+		}
+
+		if (correct >= 1)
+		{
+			correct = (short)(correct * 2);
+		}
+		else
+		{
+			correct = 1;
+		}
+	}
+
+	/*
+	This for loop print out pi to the desired precision. 
+	*/
+
+	Console.WriteLine("This is pi to the desired precision");
+	Console.WriteLine();
+
+	var piBuilder = new StringBuilder();
+
+	for (i = (pk[5002] - 1); i > -1; i--)
+	{
+		if (pk[i] > 10)
+		{
+			Console.Write(pk[i]);
+			piBuilder.Append(pk[i]);
+		}
+		else
+		{
+			Console.Write($"0{pk[i]}");
+			piBuilder.Append(CultureInfo.CurrentCulture, $"0{pk[i]}");
+		}
+	}
+
+	File.WriteAllText("pi.txt", piBuilder.ToString());
+}
 
 /*
 The multinv function calculates the multiplicative inverse of ainv using
@@ -1223,7 +1515,7 @@ static void mpmult(int[] vect1, int[] vect2, int[] alp, int[] alpinv, int[] g1)
 
 static void mpadd(int[] vect1, int[] vect2, int[] g)
 {
-	short i, j;
+	short i;
 	int t, temp, shift, tell, length, maxexp;
 	var x = new int[5003];
 	var h = new int[5003];
@@ -1400,7 +1692,7 @@ The mpsub function subtracts vect2[] from vect1[]
 static void mpsub(int[] vect1, int[] vect2, int[] g)
 {
 	short i, j, set;
-	int stemp, t, temp, shift, tell, length, maxexp;
+	int stemp, temp, shift, tell, length, maxexp;
 
 	var x = new int[5003];
 	var h = new int[5003];
@@ -1633,7 +1925,7 @@ vect[].
 static void sqrtguess(int[] vect, int[] g)
 {
 	short i;
-	int show, k, yguess;
+	int k, yguess;
 	long temp, one;
 
 	/*
@@ -1771,7 +2063,7 @@ static void ptfive(int[] @in, int[] @out)
 	This for loop performs the multiplication.
 	*/
 
-	for (i = 0; i < @in[5002], i++)
+	for (i = 0; i < @in[5002]; i++)
 	{
 		@out[i] = @in[i] * 50;
 	}
@@ -1874,8 +2166,217 @@ static void invert(int[] vect, int[] g)
 	}
 }
 
-// POST-IT, recipguess on pg. 68
+/*
+The recipguess function performs 1/vect[] for the recip function.
+*/
 
+static void recipguess(int[] vect, int[] g)
+{
+	short i;
+	double show;
+
+	/*
+	Clear out the vector.
+	*/
+
+	for (i = 0; i < 5003; i++)
+	{
+		g[i] = 0;
+	}
+
+	if (vect[5002] > 1)
+	{
+		show = 100.0 * vect[vect[5002] - 1] + vect[vect[5002] - 2];
+	}
+	else
+	{
+		show = vect[0];
+	}
+
+	if (show == 100.0 && vect[5001] == 0)
+	{
+		g[0] = 1;
+		g[5002] = 1;
+		g[5000] = 1;
+		g[5001] = 0;
+	}
+	else
+	{
+		show = 1.0 / show;
+		g[1] = (int)(100.0 * show);
+
+		if (g[1] == 0)
+		{
+			show = show * 100.0;
+			g[1] = (int)(100.0 * show);
+		}
+
+		show = show * 100.0 - (100.0 * show);
+		g[0] = (int)(100.0 * show);
+		g[5002] = 2;
+		g[5000] = 1;
+		g[5001] = vect[5001] * (-1) - 1;
+	}
+}
+
+/*
+The recip function calculates 1/y[] using Newton's Method.
+*/
+
+static void recip(int[] y, int[] alp, int[] alpinv, int[] first)
+{
+	var two = new int[5003];
+	var second = new int[5003];
+	var third = new int[5003];
+	var fourth = new int[5003];
+
+	short correct = 0, i;
+
+	/*
+	Clear out the vectors.
+	*/
+	for (i = 0; i < 5003; i++)
+	{
+		two[i] = 0;
+		first[i] = 0;
+		second[i] = 0;
+		third[i] = 0;
+		fourth[i] = 0;
+	}
+
+	/*
+	Define vector two
+	*/
+
+	two[0] = 2;
+	two[5000] = 1;
+	two[5001] = 0;
+	two[5002] = 1;
+
+	recipguess(y, first);
+
+	while (correct < Shared.limit)
+	{
+		mpmult(first, y, alp, alpinv, second);
+
+		if (second[5000] == 1)
+		{
+			mpsub(two, second, third);
+		}
+		else
+		{
+			second[5000] = 1;
+			mpadd(two, second, third);
+		}
+
+		mpmult(third, first, alp, alpinv, fourth);
+
+		for (i = 0; i < 5003; i++)
+		{
+			first[i] = fourth[i];
+		}
+
+		for (i = 0; i < 5003; i++)
+		{
+			second[i] = 0;
+			third[i] = 0;
+			fourth[i] = 0;
+		}
+
+		if (correct >= 1)
+		{
+			correct = (short)(correct * 2);
+		}
+		else
+		{
+			correct = 1;
+		}
+	}
+}
+
+/*
+The recipsqrt function calculates 1/sqrt(y[]) using Newton's Method.
+*/
+
+static void recipsqrt(int[] y, int[] alp, int[] alpinv, int[] first)
+{
+	int i;
+	var three = new int[5003];
+	var second = new int[5003];
+	var third = new int[5003];
+	var fourth = new int[5003];
+	var fifth = new int[5003];
+	var sixth = new int[5003];
+	var @try = new int[5003];
+
+	short correct = 0;
+
+	/*
+	Clear out the vectors.
+	*/
+
+	for (i = 0; i < 5003; i++)
+	{
+		three[i] = 0;
+		first[i] = 0;
+		second[i] = 0;
+		third[i] = 0;
+		fourth[i] = 0;
+	}
+
+	/*
+	Define vector three 
+	*/
+	three[0] = 3;
+	three[5000] = 1;
+	three[5001] = 0;
+	three[5002] = 1;
+
+	sqrtguess(y, @try);
+	invert(@try, first);
+
+	while (correct < Shared.limit)
+	{
+		mpmult(first, first, alp, alpinv, second);
+		mpmult(second, y, alp, alpinv, third);
+
+		if (second[5000] == 1)
+		{
+			mpsub(three, third, fourth);
+		}
+		else
+		{
+			second[5000] = 1;
+			mpadd(three, third, fourth);
+		}
+
+		mpmult(first, fourth, alp, alpinv, fifth);
+		ptfive(fifth, sixth);
+
+		for (i = 0; i < 5003; i++)
+		{
+			first[i] = sixth[i];
+		}
+
+		for (i = 0; i < 5003; i++)
+		{
+			second[i] = 0;
+			third[i] = 0;
+			fourth[i] = 0;
+			fifth[i] = 0;
+			sixth[i] = 0;
+		}
+
+		if (correct >= 1)
+		{
+			correct = (short)(correct * 2);
+		}
+		else
+		{
+			correct = 1;
+		}
+	}
+}
 
 #pragma warning disable CA1050 // Declare types in namespaces
 #pragma warning disable CA1716 // Identifiers should not match keywords
@@ -1889,18 +2390,3 @@ public static class Shared
 #pragma warning restore CA2211 // Non-constant fields should not be visible
 #pragma warning restore CA1823 // Avoid unused private fields
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
