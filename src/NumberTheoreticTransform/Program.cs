@@ -9,6 +9,9 @@ multiplication function
 The variable M is the modulus number. N is the length of the transform.
 limit is used to set the maximum precision for the calculation.
 */
+#pragma warning disable CS0219
+#pragma warning disable CS8321
+#pragma warning disable IDE0061
 
 using System.Globalization;
 using System.Text;
@@ -16,12 +19,6 @@ using System.Text;
 const int M = 50_010_001;
 const int halfM = M / 2;
 const int N = 5_000;
-
-Console.WriteLine("3.14");
-Console.WriteLine(multinv(43_015));
-Console.WriteLine(negmod(5_310_431, 415));
-Console.WriteLine(negmod(-5_310_431, 415));
-Console.WriteLine(mymod(5_310_431, 5_310_431));
 
 /*
 The main part of the program calculates pi using Borwein's quadrati-
@@ -437,6 +434,7 @@ them together using the number theoretic transform.
 
 static void mpmult(int[] vect1, int[] vect2, int[] alp, int[] alpinv, int[] g1)
 {
+#pragma warning disable CS0168
 	int n0, n1, n2, n3, n4, n5, n6, k0, k1, k2, k3, k4, k5, k6, accout, accin, accrt;
 	int t, temp;
 	int[] x0, x1, h0, h1, g0;

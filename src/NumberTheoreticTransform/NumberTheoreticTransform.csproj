@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<NoWarn>$(NoWarn);CA1508</NoWarn>
+		<Nullable>disable</Nullable>
 		<OutputType>Exe</OutputType>
 	</PropertyGroup>
 </Project>
